@@ -148,7 +148,86 @@ public class ContentTypeAPIImplTest extends ContentTypeBaseTest {
 		int count2 = contentTypeApi.count();
 		assertThat("contenttypes are added", count == count2 - runs);
 	}
+	
+    @Test
+    public void testFieldSortOrderPreserved() throws Exception {
 
+        for (BaseContentType base :  BaseContentType.values()) {
+          if(base == BaseContentType.ANY)continue;
+            long time = System.currentTimeMillis() ;
+            System.out.println(" base "  + base);
+            Thread.sleep(1);
+            ContentType type = ContentTypeBuilder.builder(BaseContentType.getContentTypeClass(base.getType()))
+                    .description("description" + time).folder(FolderAPI.SYSTEM_FOLDER).host(Host.SYSTEM_HOST)
+                    .name("ContentTypeTestingWithFields" + time).owner("owner").variable("velocityVarNameTesting" + time).build();
+            type = contentTypeApi.save(type);
+            addFields(type);
+
+            
+            List<Field> origFields = contentTypeApi.find(type.id()).fields();
+            List<Field> toSaveFields= new ArrayList<>();
+            for(Field f: origFields){
+              toSaveFields.add(FieldBuilder.builder(f).sortOrder(f.sortOrder()+1).build());
+            }
+            
+            contentTypeApi.save(type,toSaveFields);
+
+            List<Field> updatedFields = contentTypeApi.find(type.id()).fields();
+            for(int j= 0;j<updatedFields.size();j++){
+              assertThat("field orders are preserved as updated:", toSaveFields.get(j).sortOrder() == updatedFields.get(j).sortOrder() );
+            }
+            
+            
+
+            List<Field> toSaveFieldsAgain= new ArrayList<>();
+            for(Field f: updatedFields){
+              toSaveFieldsAgain.add(FieldBuilder.builder(f).sortOrder(f.sortOrder()-1).build());
+            }
+            
+            
+            contentTypeApi.save(type,toSaveFieldsAgain);
+            
+            updatedFields = contentTypeApi.find(type.id()).fields();
+            for(int j= 0;j<updatedFields.size();j++){
+              assertThat("field orders are returned to original:", origFields.get(j).sortOrder() == updatedFields.get(j).sortOrder() );
+            }
+            
+        }
+    }
+    
+    @Test
+    public void testFieldSortOrderPreservedOnDelete() throws Exception {
+
+        for (BaseContentType base :  BaseContentType.values()) {
+          if(base == BaseContentType.ANY)continue;
+            long time = System.currentTimeMillis() ;
+            System.out.println(" base "  + base);
+            Thread.sleep(1);
+            ContentType type = ContentTypeBuilder.builder(BaseContentType.getContentTypeClass(base.getType()))
+                    .description("description" + time).folder(FolderAPI.SYSTEM_FOLDER).host(Host.SYSTEM_HOST)
+                    .name("ContentTypeTestingWithFields" + time).owner("owner").variable("velocityVarNameTesting" + time).build();
+            type = contentTypeApi.save(type);
+  
+            List<Field> origFields = type.fields();
+            List<Field> toSaveFields= new ArrayList<>();
+            for(Field f: origFields){
+              toSaveFields.add(FieldBuilder.builder(f).sortOrder(f.sortOrder()+1).build());
+            }
+            
+            contentTypeApi.save(type,toSaveFields);
+
+            
+            List<Field> updatedFields = contentTypeApi.find(type.id()).fields();
+            for(int j= 0;j<updatedFields.size();j++){
+              System.out.println("sorting field " + origFields.get(j).sortOrder() + ":" + toSaveFields.get(j).sortOrder() + ":" +  updatedFields.get(j).sortOrder());
+              assertThat("field orders are preserved as saved:", toSaveFields.get(j).sortOrder() == updatedFields.get(j).sortOrder() );
+            }
+        }
+    }
+    
+    
+    
+    
 	@Test
 	public void testUpdatingContentTypes() throws Exception {
 		List<ContentType> types = contentTypeApi.findUrlMapped();
@@ -220,6 +299,9 @@ public class ContentTypeAPIImplTest extends ContentTypeBaseTest {
 
 	}
 
+	
+	
+	
 	@Test
 	public void testAddingUpdatingDeleting() throws Exception {
 
