@@ -195,37 +195,7 @@ public class ContentTypeAPIImplTest extends ContentTypeBaseTest {
         }
     }
     
-    @Test
-    public void testFieldSortOrderPreservedOnDelete() throws Exception {
 
-        for (BaseContentType base :  BaseContentType.values()) {
-          if(base == BaseContentType.ANY)continue;
-            long time = System.currentTimeMillis() ;
-            System.out.println(" base "  + base);
-            Thread.sleep(1);
-            ContentType type = ContentTypeBuilder.builder(BaseContentType.getContentTypeClass(base.getType()))
-                    .description("description" + time).folder(FolderAPI.SYSTEM_FOLDER).host(Host.SYSTEM_HOST)
-                    .name("ContentTypeTestingWithFields" + time).owner("owner").variable("velocityVarNameTesting" + time).build();
-            type = contentTypeApi.save(type);
-  
-            List<Field> origFields = type.fields();
-            List<Field> toSaveFields= new ArrayList<>();
-            for(Field f: origFields){
-              toSaveFields.add(FieldBuilder.builder(f).sortOrder(f.sortOrder()+1).build());
-            }
-            
-            contentTypeApi.save(type,toSaveFields);
-
-            
-            List<Field> updatedFields = contentTypeApi.find(type.id()).fields();
-            for(int j= 0;j<updatedFields.size();j++){
-              System.out.println("sorting field " + origFields.get(j).sortOrder() + ":" + toSaveFields.get(j).sortOrder() + ":" +  updatedFields.get(j).sortOrder());
-              assertThat("field orders are preserved as saved:", toSaveFields.get(j).sortOrder() == updatedFields.get(j).sortOrder() );
-            }
-        }
-    }
-    
-    
     
     
 	@Test
