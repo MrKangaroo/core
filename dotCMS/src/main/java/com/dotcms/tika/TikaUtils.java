@@ -145,18 +145,18 @@ public class TikaUtils {
             Logger.error(this.getClass(),
                 "Could not parse file metadata for file : " + binFile.getAbsolutePath() + ". " + e.getMessage());
         } finally {
+          try {
+            metaMap.put(FileAssetAPI.SIZE_FIELD, String.valueOf(binFile.length()));
             if (null != fulltext) {
                 IOUtils.closeQuietly(fulltext);
             }
             if (null != is) {
                 IOUtils.closeQuietly(is);
             }
-            try {
-                metaMap.put(FileAssetAPI.SIZE_FIELD, String.valueOf(binFile.length()));
-            } catch (Exception ex) {
-                Logger.error(this.getClass(),
-                    "Could not parse file metadata for file : " + binFile.getAbsolutePath() + ". " + ex.getMessage());
-            }
+          } catch (Exception ex) {
+              Logger.warn(this.getClass(),
+                  "Could not parse file metadata for file : " + binFile.getAbsolutePath() + ". " + ex.getMessage());
+          }
         }
         return metaMap;
     }
